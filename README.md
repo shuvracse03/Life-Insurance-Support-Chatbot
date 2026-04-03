@@ -2,7 +2,16 @@
 
 An AI-powered life insurance support chatbot built with **LangGraph**, **Groq (Llama 3.3)**, **FastAPI**, and **Streamlit**.
 
-The assistant answers questions about policy types, eligibility, benefits, riders, and the claims process — grounding every answer in a curated knowledge base via RAG (Retrieval-Augmented Generation), with full multi-turn memory per session.
+The assistant answers questions about policy types, eligibility, benefits, riders, and the claims process — grounding every answer in a **configurable knowledge base** via RAG (Retrieval-Augmented Generation), with full multi-turn memory per session.
+
+## ✨ Key Features
+
+- 🧠 **LangGraph ReAct Agent**: Intelligent reasoning and tool selection
+- 📚 **Configurable Knowledge Base**: Easy-to-update markdown-based content system
+- 🔍 **RAG Implementation**: FAISS vector search with HuggingFace embeddings
+- 💾 **Multi-session Memory**: SQLite-based conversation persistence
+- 🚀 **Production Ready**: FastAPI backend with Streamlit frontend
+- 🔧 **Hot-swappable Content**: Update knowledge without restarting the application
 
 ---
 
@@ -343,9 +352,11 @@ START → llm_node → [tools_node → llm_node]* → END
 
 This design provides a solid foundation for a production-ready conversational AI system while remaining simple enough for rapid iteration and debugging.
 
-### Knowledge Base & RAG Implementation
+### 🎯 Configurable Knowledge Base & RAG Implementation
 
-#### **Knowledge Base Structure**
+#### **✅ Fully Configurable Knowledge Base Structure**
+
+The Life Insurance Assistant features a **completely configurable knowledge base** that can be easily customized and extended:
 
 ```
 backend/knowledge_base/data/
@@ -355,19 +366,85 @@ backend/knowledge_base/data/
 └── policy_types.md   # Term, Whole Life, ULIP, Endowment, Money-Back
 ```
 
-#### **Vector Store Pipeline**
+#### **🔧 Knowledge Base Configuration Features**
 
-1. **Document Loading**: Markdown files are parsed and chunked into semantic segments
-2. **Embedding Generation**: HuggingFace embeddings (`sentence-transformers/all-MiniLM-L6-v2`) convert text to vectors
-3. **Vector Storage**: FAISS index stores embeddings for fast similarity search
-4. **Retrieval**: Semantic search finds most relevant chunks for user queries
+##### **1. Easy Content Updates**
 
-#### **RAG Benefits**
+```bash
+# Simply edit any markdown file in the knowledge base
+nano backend/knowledge_base/data/policy_types.md
 
-- **Accuracy**: Responses are grounded in authoritative documentation
-- **Transparency**: Users can trace answers back to source materials
-- **Updatable**: Knowledge base can be refreshed without retraining
-- **Domain-specific**: Focused on life insurance rather than general knowledge
+# Rebuild the vector store to reflect changes
+cd backend
+python -c "from knowledge_base.loader import build_vector_store; build_vector_store()"
+```
+
+##### **2. Adding New Knowledge Categories**
+
+```bash
+# Add new markdown files for additional topics
+echo "# Investment Plans" > backend/knowledge_base/data/investments.md
+echo "# Senior Citizen Policies" > backend/knowledge_base/data/senior_policies.md
+
+# The system automatically includes all .md files in the data directory
+python -c "from knowledge_base.loader import build_vector_store; build_vector_store()"
+```
+
+##### **3. Configurable Retrieval Parameters**
+
+The retrieval system can be tuned via the `get_retriever()` function:
+
+- **Chunk size**: Adjustable document segmentation
+- **Search results**: Number of relevant chunks returned (default: 3)
+- **Similarity threshold**: Minimum relevance score for results
+- **Embedding model**: Switchable HuggingFace models
+
+##### **4. Multi-format Support**
+
+The knowledge base loader supports:
+
+- **Markdown files** (.md) - Primary format
+- **Text files** (.txt) - Plain text documents
+- **Structured data** - Can be extended for JSON, CSV, etc.
+
+#### **🔄 Dynamic Knowledge Base Updates**
+
+**Hot-swappable Content:**
+
+1. **Update content**: Modify any file in `backend/knowledge_base/data/`
+2. **Rebuild index**: Run `build_vector_store()`
+3. **Zero downtime**: No need to restart the application
+4. **Instant availability**: New content is immediately searchable
+
+**Configuration Examples:**
+
+```python
+# Custom knowledge base directory
+KNOWLEDGE_BASE_PATH = "custom/knowledge/path"
+
+# Custom embedding model
+EMBEDDING_MODEL = "sentence-transformers/all-mpnet-base-v2"
+
+# Custom chunk size for document splitting
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 200
+```
+
+#### **📊 Vector Store Pipeline**
+
+1. **Document Loading**: Recursive scanning of markdown files with configurable directory paths
+2. **Text Processing**: Configurable chunking strategies and preprocessing rules
+3. **Embedding Generation**: Switchable HuggingFace models (`sentence-transformers/all-MiniLM-L6-v2` default)
+4. **Vector Storage**: FAISS index with configurable similarity metrics
+5. **Retrieval**: Semantic search with adjustable result count and relevance thresholds
+
+#### **🎁 Configurable RAG Benefits**
+
+- **✅ Fully Customizable**: Add/remove/modify knowledge without code changes
+- **✅ Multi-domain Ready**: Easy to adapt for other insurance types or industries
+- **✅ Performance Tunable**: Adjust retrieval parameters for speed vs. accuracy
+- **✅ Content Versioning**: Track knowledge base changes and rollback if needed
+- **✅ A/B Testing Ready**: Test different content versions seamlessly
 
 ---
 
@@ -467,3 +544,37 @@ cd backend && uvicorn app.main:app --reload
 # Frontend with file watching
 cd frontend && streamlit run app.py --server.fileWatcherType poll
 ```
+
+### Knowledge Base Configuration
+
+#### **Adding New Content**
+
+```bash
+# 1. Create new markdown file
+echo "# New Insurance Topic" > backend/knowledge_base/data/new_topic.md
+
+# 2. Add your content to the file
+nano backend/knowledge_base/data/new_topic.md
+
+# 3. Rebuild vector store
+cd backend && python -c "from knowledge_base.loader import build_vector_store; build_vector_store()"
+```
+
+#### **Updating Existing Content**
+
+```bash
+# 1. Edit any markdown file
+nano backend/knowledge_base/data/policy_types.md
+
+# 2. Rebuild to reflect changes
+cd backend && python -c "from knowledge_base.loader import build_vector_store; build_vector_store()"
+```
+
+#### **Custom Configuration Options**
+
+Modify `backend/knowledge_base/loader.py` to customize:
+
+- Document chunk size and overlap
+- Embedding model selection
+- Retrieval result count
+- Similarity search thresholds
