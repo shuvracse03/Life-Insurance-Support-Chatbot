@@ -4,6 +4,10 @@ An AI-powered life insurance support chatbot built with **LangGraph**, **Groq (L
 
 The assistant answers questions about policy types, eligibility, benefits, riders, and the claims process — grounding every answer in a **configurable knowledge base** via RAG (Retrieval-Augmented Generation), with full multi-turn memory per session.
 
+## Loom Video
+
+https://www.loom.com/share/70dc82190786429abf4933b4fee65939
+
 ## ✨ Key Features
 
 - 🧠 **LangGraph ReAct Agent**: Intelligent reasoning and tool selection
